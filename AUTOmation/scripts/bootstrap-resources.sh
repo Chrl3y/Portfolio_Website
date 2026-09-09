@@ -36,8 +36,10 @@ clone_audio() {
 }
 
 clone_voice() {
+  clone_if_missing https://github.com/resemble-ai/chatterbox.git "$VENDOR_DIR/chatterbox"
   clone_if_missing https://github.com/myshell-ai/OpenVoice.git "$VENDOR_DIR/OpenVoice"
   clone_if_missing https://github.com/SWivid/F5-TTS.git "$VENDOR_DIR/F5-TTS"
+  clone_if_missing https://github.com/FunAudioLLM/CosyVoice.git "$VENDOR_DIR/CosyVoice"
   clone_if_missing https://github.com/coqui-ai/TTS.git "$VENDOR_DIR/TTS"
 }
 
@@ -45,6 +47,8 @@ clone_visual_ai() {
   clone_if_missing https://github.com/comfyanonymous/ComfyUI.git "$VENDOR_DIR/ComfyUI"
   clone_if_missing https://github.com/Lightricks/LTX-Video.git "$VENDOR_DIR/LTX-Video"
   clone_if_missing https://github.com/Lightricks/LTX-Desktop.git "$VENDOR_DIR/LTX-Desktop"
+  clone_if_missing https://github.com/Wan-Video/Wan2.2.git "$VENDOR_DIR/Wan2.2"
+  clone_if_missing https://github.com/THUDM/CogKit.git "$VENDOR_DIR/CogKit"
 }
 
 clone_avatar_optional() {
