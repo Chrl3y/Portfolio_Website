@@ -1,0 +1,64 @@
+services:
+  n8n:
+    role: primary_orchestrator
+    mode: self_hosted_preferred
+    base_url_env: N8N_BASE_URL
+    api_key_env: N8N_API_KEY
+  postiz:
+    role: primary_social_publisher
+    mode: self_hosted_preferred
+    base_url_env: POSTIZ_BASE_URL
+    api_key_env: POSTIZ_API_KEY
+  activepieces:
+    role: secondary_automation_connector_layer
+    mode: optional_self_hosted
+    base_url_env: ACTIVEPIECES_BASE_URL
+    api_key_env: ACTIVEPIECES_API_KEY
+  ayrshare:
+    role: managed_social_api_fallback
+    mode: saas_api
+    api_key_env: AYRSHARE_API_KEY
+  vizard:
+    role: video_clipping_captioning_broll_publishing
+    mode: saas_api
+    api_key_env: VIZARD_API_KEY
+  remotion:
+    role: programmatic_video_renderer
+    mode: local_or_worker
+  manim:
+    role: technical_animation_renderer
+    mode: local_or_worker
+  whisper:
+    role: transcription
+    mode: local_or_hosted
+
+source_types:
+  - brain_note
+  - changelog
+  - github_activity
+  - photo
+  - video
+  - audio_recording
+  - approved_meeting_note
+  - public_case_study
+
+classification:
+  default: PRIVATE
+  allowed:
+    - PUBLIC
+    - REVIEW
+    - PRIVATE
+
+primary_flow:
+  - intake
+  - normalize
+  - classify
+  - redact
+  - transcribe_if_needed
+  - draft_canonical_content
+  - generate_channel_variants
+  - approval_gate
+  - publish
+  - collect_analytics
+  - attribute_revenue
+  - feed_back_winners
