@@ -1,0 +1,17 @@
+vendor/
+models/
+checkpoints/
+renders/
+cache/
+tmp/
+.env
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+*.bin
+*.onnx
+*.mp4
+*.mov
+*.wav
+*.flac
