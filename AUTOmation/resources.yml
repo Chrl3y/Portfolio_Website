@@ -38,6 +38,12 @@ transcription_audio:
     priority: low
 
 voice_optional:
+  - name: chatterbox
+    repo: https://github.com/resemble-ai/chatterbox.git
+    destination: vendor/chatterbox
+    priority: high
+    policy: user-owned-or-consented-voices-only
+    note: zero-shot voice cloning; upstream documents MIT licensing and watermarked outputs
   - name: openvoice
     repo: https://github.com/myshell-ai/OpenVoice.git
     destination: vendor/OpenVoice
@@ -46,6 +52,11 @@ voice_optional:
   - name: f5-tts
     repo: https://github.com/SWivid/F5-TTS.git
     destination: vendor/F5-TTS
+    priority: medium
+    policy: user-owned-or-consented-voices-only
+  - name: cosyvoice
+    repo: https://github.com/FunAudioLLM/CosyVoice.git
+    destination: vendor/CosyVoice
     priority: medium
     policy: user-owned-or-consented-voices-only
   - name: coqui-tts
@@ -84,11 +95,21 @@ generative_video:
   - name: ltx-video
     repo: https://github.com/Lightricks/LTX-Video.git
     destination: vendor/LTX-Video
-    priority: medium
+    priority: high
   - name: ltx-desktop
     repo: https://github.com/Lightricks/LTX-Desktop.git
     destination: vendor/LTX-Desktop
     priority: medium
+  - name: wan2.2
+    repo: https://github.com/Wan-Video/Wan2.2.git
+    destination: vendor/Wan2.2
+    priority: medium
+    note: large models; cloud/NVIDIA GPU likely required
+  - name: cogkit
+    repo: https://github.com/THUDM/CogKit.git
+    destination: vendor/CogKit
+    priority: low
+    note: inference/fine-tuning toolkit for CogVideoX/CogView families
 
 talking_head_optional:
   - name: liveportrait
@@ -110,4 +131,5 @@ talking_head_optional:
 hosted_api_only:
   - ayrshare
   - vizard
+  - elevenlabs-optional
   - social-platform-official-apis
