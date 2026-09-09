@@ -1,0 +1,79 @@
+{
+  "name": "Video Intake - AUTOmation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "video-intake"
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 340]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [\n  {\n    json: {\n      video_path: items[0].json.body.video_path,\n      source_metadata: items[0].json.body,\n      transcript_path: items[0].json.body.video_path.replace('.mp4', '.json'),\n      scene_plan_path: items[0].json.body.video_path.replace('.mp4', '.scene.json'),\n    }\n  }\n];"
+      },
+      "name": "Extract Metadata",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [480, 340]
+    },
+    {
+      "parameters": {
+        "commands": [
+          "source /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation/faster-whisper-env/bin/activate && python /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation/tests/test_transcription.py \"{{ $json.video_path }}\" > \"{{ $json.transcript_path }}\" 2>&1"
+        ],
+        "cwd": "/Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation"
+      },
+      "name": "Run Transcription",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [720, 340]
+    },
+    {
+      "parameters": {
+        "operations": [
+          {
+            "operation": "read",
+            "fileName": "={{ $json.transcript_path }}"
+          }
+        ]
+      },
+      "name": "Read Transcript",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [960, 340]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Metadata": {
+      "main": [
+        [
+          {
+            "node": "Run Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Africa/Kampala"
+  },
+  "versionId": "1"
+}

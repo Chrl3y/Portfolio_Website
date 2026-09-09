@@ -1,0 +1,84 @@
+{
+  "name": "Publish Draft - AUTOmation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "publish-draft"
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 340]
+    },
+    {
+      "parameters": {
+        "url": "http://postiz-automation:3004/api/posts",
+        "method": "POST",
+        "body": {
+          "text": "={{ $json.caption }}",
+          "mediaUrls": "={{ $json.media_urls }}",
+          "platforms": "={{ $json.platforms }}",
+          "status": "draft"
+        },
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "name": "Postiz API Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [480, 340]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "id": "={{ $json.content_id }}",
+        "fields": {
+          "publication_jobs": {
+            "add": {
+              "postiz_id": "={{ $jsonPostizApiResponse.id }}",
+              "status": "draft",
+              "platform": "postiz"
+            }
+          }
+        }
+      },
+      "name": "Update Content Item",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [720, 340]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postiz API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postiz API Call": {
+      "main": [
+        [
+          {
+            "node": "Update Content Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Africa/Kampala"
+  },
+  "versionId": "1"
+}

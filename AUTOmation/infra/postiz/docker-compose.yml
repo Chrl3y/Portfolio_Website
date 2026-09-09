@@ -1,0 +1,245 @@
+# AUTOmation Postiz self-hosted orchestration
+# Based on the official postiz-docker-compose repository.
+# Postiz requires: PostgreSQL, Redis, and Temporal (workflow orchestration).
+# All credentials are local dev placeholders — never commit real secrets.
+# Do NOT connect live social accounts — this is for local UI/API verification only.
+
+services:
+  # ---------------------------------------------------------------
+  # Postiz application (frontend + backend + orchestrator in one container)
+  # ---------------------------------------------------------------
+  postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    container_name: postiz-automation
+    restart: unless-stopped
+    environment:
+      # === Required Settings
+      MAIN_URL: 'http://localhost:3004'
+      FRONTEND_URL: 'http://localhost:3004'
+      NEXT_PUBLIC_BACKEND_URL: 'http://localhost:3004/api'
+      JWT_SECRET: 'auto-dev-jwt-secret-change-in-prod'
+      DATABASE_URL: 'postgresql://postiz-user:postiz-password@postgres-postiz:5432/postiz-db-local'
+      REDIS_URL: 'redis://redis-postiz:6379'
+      BACKEND_INTERNAL_URL: 'http://localhost:3000'
+      TEMPORAL_ADDRESS: 'temporal-postiz:7233'
+      IS_GENERAL: 'true'
+      DISABLE_REGISTRATION: 'true'
+      RUN_CRON: 'true'
+      # === Storage
+      STORAGE_PROVIDER: 'local'
+      UPLOAD_DIRECTORY: '/uploads'
+      NEXT_PUBLIC_UPLOAD_DIRECTORY: '/uploads'
+      # === Social Media API Settings — ALL EMPTY (no live accounts)
+      X_API_KEY: ''
+      X_API_SECRET: ''
+      LINKEDIN_CLIENT_ID: ''
+      LINKEDIN_CLIENT_SECRET: ''
+      REDDIT_CLIENT_ID: ''
+      REDDIT_CLIENT_SECRET: ''
+      GITHUB_CLIENT_ID: ''
+      GITHUB_CLIENT_SECRET: ''
+      BEEHIIVE_API_KEY: ''
+      BEEHIIVE_PUBLICATION_ID: ''
+      THREADS_APP_ID: ''
+      THREADS_APP_SECRET: ''
+      FACEBOOK_APP_ID: ''
+      FACEBOOK_APP_SECRET: ''
+      YOUTUBE_CLIENT_ID: ''
+      YOUTUBE_CLIENT_SECRET: ''
+      TIKTOK_CLIENT_ID: ''
+      TIKTOK_CLIENT_SECRET: ''
+      PINTEREST_CLIENT_ID: ''
+      PINTEREST_CLIENT_SECRET: ''
+      DRIBBBLE_CLIENT_ID: ''
+      DRIBBBLE_CLIENT_SECRET: ''
+      DISCORD_CLIENT_ID: ''
+      DISCORD_CLIENT_SECRET: ''
+      DISCORD_BOT_TOKEN_ID: ''
+      SLACK_ID: ''
+      SLACK_SECRET: ''
+      SLACK_SIGNING_SECRET: ''
+      MASTODON_URL: 'https://mastodon.social'
+      MASTODON_CLIENT_ID: ''
+      MASTODON_CLIENT_SECRET: ''
+      # === Misc
+      OPENAI_API_KEY: ''
+      NEXT_PUBLIC_DISCORD_SUPPORT: ''
+      NEXT_PUBLIC_POLOTNO: ''
+      API_LIMIT: '30'
+      # === Payment (disabled in dev)
+      STRIPE_PUBLISHABLE_KEY: ''
+      STRIPE_SECRET_KEY: ''
+      STRIPE_SIGNING_KEY: ''
+      STRIPE_SIGNING_KEY_CONNECT: ''
+      FEE_AMOUNT: '0.05'
+      # === Developer
+      NX_ADD_PLUGINS: 'false'
+    ports:
+      - "3004:5000"
+    networks:
+      - postiz-network
+      - temporal-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "const r=require('http').get('http://localhost:5000/',res=>process.exit(res.statusCode<500?0:1));r.on('error',()=>process.exit(1));r.setTimeout(4000,()=>{r.destroy();process.exit(1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    depends_on:
+      postgres-postiz:
+        condition: service_healthy
+      redis-postiz:
+        condition: service_healthy
+      temporal-postiz:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------
+  # PostgreSQL for Postiz
+  # ---------------------------------------------------------------
+  postgres-postiz:
+    image: postgres:16-alpine
+    container_name: postgres-postiz-automation
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postiz-password
+      POSTGRES_USER: postiz-user
+      POSTGRES_DB: postiz-db-local
+    volumes:
+      - postgres_postiz_data:/var/lib/postgresql/data
+    networks:
+      - postiz-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postiz-user -d postiz-db-local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---------------------------------------------------------------
+  # Redis for Postiz (no auth in dev)
+  # ---------------------------------------------------------------
+  redis-postiz:
+    image: redis:7-alpine
+    container_name: redis-postiz-automation
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - redis_postiz_data:/data
+    networks:
+      - postiz-network
+
+  # ---------------------------------------------------------------
+  # Temporal stack (required by Postiz for workflow orchestration)
+  # ---------------------------------------------------------------
+  temporal-elasticsearch:
+    container_name: temporal-elasticsearch-automation
+    image: elasticsearch:7.17.27
+    restart: unless-stopped
+    environment:
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.low=512mb
+      - cluster.routing.allocation.disk.watermark.high=256mb
+      - cluster.routing.allocation.disk.watermark.flood_stage=128mb
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms128m -Xmx128m
+      - xpack.security.enabled=false
+    networks:
+      - temporal-network
+    expose:
+      - 9200
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS \"http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s\" || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    volumes:
+      - temporal_elasticsearch_data:/usr/share/elasticsearch/data
+
+  temporal-postgresql:
+    container_name: temporal-postgresql-automation
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: temporal
+      POSTGRES_USER: temporal
+    networks:
+      - temporal-network
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U temporal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - temporal_postgres_data:/var/lib/postgresql/data
+
+  temporal-postiz:
+    container_name: temporal-postiz-automation
+    image: temporalio/auto-setup:1.28.1
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:7233:7233'
+    depends_on:
+      temporal-postgresql:
+        condition: service_healthy
+      temporal-elasticsearch:
+        condition: service_healthy
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+      - POSTGRES_SEEDS=temporal-postgresql
+      - ENABLE_ES=true
+      - ES_SEEDS=temporal-elasticsearch
+      - ES_VERSION=v7
+      - TEMPORAL_NAMESPACE=default
+    networks:
+      - temporal-network
+    healthcheck:
+      test: ["CMD", "temporal", "operator", "cluster", "health", "--address", "temporal-postiz:7233"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes: []
+
+  temporal-ui-automation:
+    container_name: temporal-ui-automation
+    image: temporalio/ui:2.34.0
+    restart: unless-stopped
+    environment:
+      - TEMPORAL_ADDRESS=temporal-postiz:7233
+      - TEMPORAL_CORS_ORIGINS=http://127.0.0.1:3004
+    networks:
+      - temporal-network
+    ports:
+      - '127.0.0.1:8233:8080'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      temporal-postiz:
+        condition: service_healthy
+
+volumes:
+  postgres_postiz_data:
+  redis_postiz_data:
+  temporal_elasticsearch_data:
+  temporal_postgres_data:
+
+networks:
+  postiz-network:
+  temporal-network:
+    driver: bridge

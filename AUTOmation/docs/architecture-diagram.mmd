@@ -1,0 +1,44 @@
+graph TD
+    subgraph "LOCAL (Apple Silicon M1 Pro)"
+        A[Recording Approved Notes] --> B[faster-whisper Transcription]
+        B --> C[Scene Plan Generator]
+        C --> D[Manim Animations]
+        C --> E[Mermaid Diagrams]
+        C --> F[Remotion Branded Explainers]
+        E --> G[Social-Ready Media]
+        F --> G
+        D --> G
+        G --> H[n8n Orchestration]
+        H --> I[Postiz Publishing Layer]
+    end
+
+    subgraph "CLOUD GPU (deferred — not M1 Pro compatible)"
+        J[Wan2.2] --> K[Video Generation]
+        L[LTX / CogVideoX] --> K
+        K --> G
+    end
+
+    subgraph "ADAPTERS (config docs only)"
+        M[Vizard API Stub] --> N[Highlight Clipping]
+        O[Ayrshare API Stub] --> P[Multi-network Publish]
+    end
+
+    subgraph "EXTERNAL SERVICES (not connected)"
+        Q[Social Platforms<br/>X / LinkedIn / TikTok / YouTube]
+    end
+
+    I --> Q
+    O --> Q
+
+    style A fill:#e74c3c
+    style B fill:#3498db
+    style C fill:#9b59b6
+    style D fill:#1abc9c
+    style E fill:#1abc9c
+    style F fill:#1abc9c
+    style G fill:#f39c12
+    style H fill:#34495e
+    style I fill:#e67e22
+    style J fill:#95a5a6
+    style L fill:#95a5a6
+    style Q fill:#95a5a6

@@ -1,17 +1,66 @@
+# Vendor dependencies (never commit)
 vendor/
+
+# Model weights and checkpoints
 models/
 checkpoints/
-renders/
-cache/
-tmp/
-.env
 *.ckpt
 *.safetensors
 *.pt
 *.pth
 *.bin
 *.onnx
+
+# Rendered media output
+renders/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Cache and temp
+cache/
+tmp/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Venv directories
+*-env/
+env/
+venv/
+.venv/
+
+# Media recordings (source material)
 *.mp4
 *.mov
 *.wav
 *.flac
+*.mp3
+*.m4a
+*.aac
+
+# Node / npm / pnpm artifacts
+node_modules/
+.pnpm/
+.pnpm-store/
+
+# Remotion media output
+media/remotion/renders/
+media/manim/renders/
+media/remotion/media/
+
+# Manim temp/movie files
+media/manim/media/
+
+# Browser/puppeteer cache
+.puppeteer/
+
+# Python uv cache
+.uv-cache/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
