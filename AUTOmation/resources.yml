@@ -1,0 +1,113 @@
+# AUTOmation pullable-resource manifest
+# Clone/install these into a LOCAL vendor/cache directory. Do not commit vendor trees.
+
+core:
+  - name: postiz
+    repo: https://github.com/gitroomhq/postiz-app.git
+    destination: vendor/postiz-app
+    priority: high
+  - name: n8n
+    repo: https://github.com/n8n-io/n8n.git
+    destination: vendor/n8n
+    priority: high
+  - name: activepieces
+    repo: https://github.com/activepieces/activepieces.git
+    destination: vendor/activepieces
+    priority: medium
+
+transcription_audio:
+  - name: whisper
+    repo: https://github.com/openai/whisper.git
+    destination: vendor/whisper
+    priority: medium
+  - name: faster-whisper
+    repo: https://github.com/SYSTRAN/faster-whisper.git
+    destination: vendor/faster-whisper
+    priority: high
+  - name: whisperx
+    repo: https://github.com/m-bain/whisperX.git
+    destination: vendor/whisperX
+    priority: high
+  - name: deepfilternet
+    repo: https://github.com/Rikorose/DeepFilterNet.git
+    destination: vendor/DeepFilterNet
+    priority: medium
+  - name: demucs
+    repo: https://github.com/facebookresearch/demucs.git
+    destination: vendor/demucs
+    priority: low
+
+voice_optional:
+  - name: openvoice
+    repo: https://github.com/myshell-ai/OpenVoice.git
+    destination: vendor/OpenVoice
+    priority: medium
+    policy: user-owned-or-consented-voices-only
+  - name: f5-tts
+    repo: https://github.com/SWivid/F5-TTS.git
+    destination: vendor/F5-TTS
+    priority: medium
+    policy: user-owned-or-consented-voices-only
+  - name: coqui-tts
+    repo: https://github.com/coqui-ai/TTS.git
+    destination: vendor/TTS
+    priority: low
+    policy: verify-current-maintenance-and-model-license
+
+rendering:
+  - name: remotion
+    repo: https://github.com/remotion-dev/remotion.git
+    destination: vendor/remotion
+    priority: high
+  - name: manim
+    repo: https://github.com/ManimCommunity/manim.git
+    destination: vendor/manim
+    priority: high
+  - name: mermaid
+    repo: https://github.com/mermaid-js/mermaid.git
+    destination: vendor/mermaid
+    priority: high
+  - name: imagemagick
+    repo: https://github.com/ImageMagick/ImageMagick.git
+    destination: vendor/ImageMagick
+    priority: low
+  - name: ffmpeg
+    repo: https://github.com/FFmpeg/FFmpeg.git
+    destination: vendor/FFmpeg
+    priority: system-install-preferred
+
+generative_video:
+  - name: comfyui
+    repo: https://github.com/comfyanonymous/ComfyUI.git
+    destination: vendor/ComfyUI
+    priority: high
+  - name: ltx-video
+    repo: https://github.com/Lightricks/LTX-Video.git
+    destination: vendor/LTX-Video
+    priority: medium
+  - name: ltx-desktop
+    repo: https://github.com/Lightricks/LTX-Desktop.git
+    destination: vendor/LTX-Desktop
+    priority: medium
+
+talking_head_optional:
+  - name: liveportrait
+    repo: https://github.com/KwaiVGI/LivePortrait.git
+    destination: vendor/LivePortrait
+    priority: low
+    policy: user-owned-or-consented-images-only
+  - name: musetalk
+    repo: https://github.com/TMElyralab/MuseTalk.git
+    destination: vendor/MuseTalk
+    priority: low
+    policy: user-owned-or-consented-images-only
+  - name: wav2lip
+    repo: https://github.com/Rudrabha/Wav2Lip.git
+    destination: vendor/Wav2Lip
+    priority: low
+    policy: check-license-before-commercial-use
+
+hosted_api_only:
+  - ayrshare
+  - vizard
+  - social-platform-official-apis
