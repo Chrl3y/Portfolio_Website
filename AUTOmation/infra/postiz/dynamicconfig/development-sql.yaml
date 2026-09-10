@@ -1,0 +1,13 @@
+# Temporal dynamic config for local Postiz development
+frontend:
+  handler:
+    scrape:
+      enabled: true
+      interval: "10s"
+system:
+  workflow:
+    execution:
+      history:
+        size:
+          onlyCore: true
+          limit: 5000

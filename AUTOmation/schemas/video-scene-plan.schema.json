@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Video Scene Plan",
+  "description": "Schema for AUTOmation video scene plans",
+  "type": "object",
+  "required": ["schema", "version", "content_id", "scenes", "duration"],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "video-scene-plan"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "content_id": {
+      "type": "string"
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "renderer", "content"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "original-camera",
+              "kinetic-text",
+              "quote",
+              "title",
+              "diagram",
+              "flowchart",
+              "timeline",
+              "list",
+              "metric",
+              "screenshot",
+              "code",
+              "b-roll-placeholder",
+              "cta"
+            ]
+          },
+          "renderer": {
+            "type": "string",
+            "enum": ["remotion", "manim", "mermaid"]
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 0
+          },
+          "start": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end": {
+            "type": "number",
+            "minimum": 0
+          },
+          "content": {
+            "type": "object",
+            "properties": {
+              "title": {"type": "string"},
+              "text": {"type": "string"},
+              "source": {"type": "string"},
+              "nodes": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "emphasis": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "image_path": {"type": "string"},
+              "code": {"type": "string"},
+              "language": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "duration": {
+      "type": "number",
+      "minimum": 0
+    }
+  }
+}

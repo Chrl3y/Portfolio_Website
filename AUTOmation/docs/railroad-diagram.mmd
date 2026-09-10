@@ -1,0 +1,65 @@
+---
+title: AUTOmation Pipeline Railroad Diagram
+---
+
+## Content Item Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Intake
+    Intake --> Transcription
+    Transcription --> ScenePlan
+    ScenePlan --> Animation
+    Animation --> Review
+    Review --> Published
+    Review --> Rejected
+    Published --> Analytics
+    Rejected --> [*]
+    
+    state Intake {
+        [*] --> Webhook
+        Webhook --> Metadata
+        Metadata --> Classification
+        Classification --> PUBLIC
+        Classification --> REVIEW
+        Classification --> PRIVATE
+    }
+```
+
+## Publishing Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> ContentItem
+    ContentItem --> ApprovalCheck
+    ApprovalCheck --> Draft
+    ApprovalCheck --> Approved
+    Draft --> PostizAPI
+    Approved --> PostizAPI
+    PostizAPI --> Scheduled
+    PostizAPI --> Published
+    Scheduled --> Published
+    Published --> Analytics
+    Published --> Error
+    Error --> Retry
+    Retry --> PostizAPI
+```
+
+## Transcription Pipeline
+
+```mermaid
+flowchart LR
+    A[Recording WAV/MP4] --> B[DeepFilterNet Noise Reduction]
+    B --> C[faster-whisper Transcription]
+    C --> D[Slow/Words Alignment<br/>WhisperX]
+    D --> E[Scene Plan JSON]
+    E --> F[Render Engine Selector]
+    F --> G[Manim Tech Animations]
+    F --> H[Mermaid Architecture]
+    F --> I[Remotion Branded Explainers]
+    G --> J[Social-Ready Media]
+    H --> J
+    I --> J
+    J --> K[n8n Orchestration]
+    K --> L[Postiz Publishing]
+```

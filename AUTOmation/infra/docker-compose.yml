@@ -1,0 +1,44 @@
+# AUTOmation local orchestration
+# n8n primary control plane + supporting services
+# Do not commit .env files or vendor directories.
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:1.106.2
+    container_name: n8n-automation
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-local-dev-only-key-change-me}
+      - GENERIC_TIMEZONE=Africa/Kampala
+      - N8N_SECURE_COOKIE=false
+      - VITE_N8N_URL_BASE_WEBHOOK=http://localhost:5678/
+      - N8N_DEPLOYMENT_TYPE=docker
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres-n8n
+
+  postgres-n8n:
+    image: postgres:16-alpine
+    container_name: postgres-n8n-automation
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: n8n
+      POSTGRES_USER: n8n
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n8n-dev-pass}
+    volumes:
+      - postgres_n8n_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U n8n"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  n8n_data:
+  postgres_n8n_data:

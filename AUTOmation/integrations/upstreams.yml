@@ -1,0 +1,59 @@
+services:
+  n8n:
+    role: primary-orchestrator
+    deployment: self-hosted-preferred
+    upstream: https://github.com/n8n-io/n8n
+    docs: https://docs.n8n.io/
+    integration_modes: [api, webhook, mcp]
+
+  postiz:
+    role: primary-social-publisher
+    deployment: self-hosted-preferred
+    upstream: https://github.com/gitroomhq/postiz-app
+    docs: https://docs.postiz.com/
+    integration_modes: [api, mcp]
+
+  activepieces:
+    role: secondary-automation-and-connectors
+    deployment: optional-self-hosted
+    upstream: https://github.com/activepieces/activepieces
+    docs: https://www.activepieces.com/docs/
+    integration_modes: [api, webhook, mcp]
+
+  ayrshare:
+    role: managed-social-api-fallback
+    deployment: saas
+    docs: https://www.ayrshare.com/
+    integration_modes: [api]
+
+  vizard:
+    role: ai-video-repurposing
+    deployment: saas
+    docs: https://docs.vizard.ai/
+    integration_modes: [api]
+
+  remotion:
+    role: programmatic-video-renderer
+    deployment: local-or-render-worker
+    upstream: https://github.com/remotion-dev/remotion
+    docs: https://www.remotion.dev/
+    integration_modes: [cli, node]
+
+  manim:
+    role: precision-animation-renderer
+    deployment: local-or-render-worker
+    upstream: https://github.com/ManimCommunity/manim
+    docs: https://docs.manim.community/
+    integration_modes: [cli, python]
+
+  whisper:
+    role: transcription
+    deployment: local-or-hosted
+    upstream: https://github.com/openai/whisper
+    integration_modes: [python, cli]
+
+policy:
+  vendor_upstream_source_into_portfolio: false
+  credentials_in_git: false
+  default_content_classification_for_work_material: PRIVATE
+  live_posting_default: disabled

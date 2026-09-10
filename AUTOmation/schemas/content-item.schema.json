@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Content Item",
+  "description": "Canonical schema for a content item in the AUTOmation pipeline",
+  "type": "object",
+  "required": ["id", "source_type", "title", "classification", "approval_status", "created_at", "updated_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier (UUID)"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": ["recording", "link", "note", "video", "image", "text"],
+      "description": "Origin type of the content"
+    },
+    "source_path": {
+      "type": "string",
+      "description": "Path or URL to the source material"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable title"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Short summary or description"
+    },
+    "classification": {
+      "type": "string",
+      "enum": ["PUBLIC", "REVIEW", "PRIVATE"],
+      "description": "Visibility classification"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": ["draft", "review", "approved", "published", "rejected"],
+      "description": "Approval workflow status"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    },
+    "transcript": {
+      "type": ["string", "object"],
+      "description": "Transcription text or path to transcript file/JSON"
+    },
+    "platforms": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Target platforms for publishing"
+    },
+    "campaign_id": {
+      "type": ["string", "null"],
+      "description": "Associated campaign identifier"
+    },
+    "utm_source": {
+      "type": ["string", "null"],
+      "description": "UTM source for tracking"
+    },
+    "utm_medium": {
+      "type": ["string", "null"],
+      "description": "UTM medium for tracking"
+    },
+    "utm_campaign": {
+      "type": ["string", "null"],
+      "description": "UTM campaign for tracking"
+    },
+    "media_assets": {
+      "type": "array",
+      "items": {"type": "object"},
+      "description": "Generated or attached media assets (videos, images, audio)"
+    },
+    "publication_jobs": {
+      "type": "array",
+      "items": {"type": "object"},
+      "description": "References to publishing jobs"
+    },
+    "published_urls": {
+      "type": "array",
+      "items": {"type": "string", "format": "uri"},
+      "description": "URLs where the content was published"
+    },
+    "affiliate_candidates": {
+      "type": "array",
+      "items": {"type": "object"},
+      "description": "Potential affiliate products/links"
+    },
+    "analytics": {
+      "type": "object",
+      "description": "Performance metrics for published content"
+    }
+  }
+}

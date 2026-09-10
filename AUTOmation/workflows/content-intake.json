@@ -1,0 +1,110 @@
+{
+  "name": "Content Intake - AUTOmation",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 340]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "content-intake"
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [480, 340]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.source_type }}",
+              "operation": "equal",
+              "value2": "recording"
+            }
+          ]
+        }
+      },
+      "name": "Classify Source",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [720, 340]
+    },
+    {
+      "parameters": {},
+      "name": "PUBLIC",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {},
+      "name": "REVIEW",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [960, 340]
+    },
+    {
+      "parameters": {},
+      "name": "PRIVATE",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [960, 480]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Webhook Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Classify Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Source": {
+      "main": [
+        [
+          {
+            "node": "PUBLIC",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "REVIEW",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "PRIVATE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Africa/Kampala"
+  },
+  "versionId": "1"
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Publishing Job",
+  "description": "Schema for a publishing job — tracks the status of publishing content to a platform",
+  "type": "object",
+  "required": ["id", "content_item_id", "platform", "status", "created_at", "updated_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this publishing job"
+    },
+    "content_item_id": {
+      "type": "string",
+      "description": "Reference to the content item being published"
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["postiz", "ayrshare", "direct", "draft"],
+      "description": "Publishing platform/adapter used"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "draft", "scheduled", "published", "failed"],
+      "description": "Current status of the publishing job"
+    },
+    "scheduled_for": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Scheduled publication time"
+    },
+    "published_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Actual publication timestamp"
+    },
+    "published_url": {
+      "type": ["string", "null"],
+      "format": "uri",
+      "description": "URL where the content was published"
+    },
+    "platform_post_id": {
+      "type": ["string", "null"],
+      "description": "ID assigned by the platform"
+    },
+    "external_job_id": {
+      "type": ["string", "null"],
+      "description": "ID from external service (e.g., Postiz, Ayrshare)"
+    },
+    "error": {
+      "type": ["string", "null"],
+      "description": "Error message if the job failed"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

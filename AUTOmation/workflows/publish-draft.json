@@ -1,0 +1,268 @@
+{
+  "name": "Publish Draft - AUTOmation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "publish-draft"
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 340]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.classification }}",
+              "operation": "notEqual",
+              "value2": "PRIVATE"
+            }
+          ]
+        }
+      },
+      "name": "Gate: Not Private",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [480, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.approval_status }}",
+              "operation": "equal",
+              "value2": "APPROVED"
+            }
+          ]
+        }
+      },
+      "name": "Gate: Approved",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [480, 340]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.confidentiality_checked }}",
+              "operation": "true"
+            }
+          ]
+        }
+      },
+      "name": "Gate: Confidentiality Checked",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [480, 480]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.POSTIZ_PUBLIC_URL }}/public/v1/posts",
+        "method": "POST",
+        "body": {
+          "type": "draft",
+          "creationMethod": "API",
+          "posts": [
+            {
+              "identifier": "={{ $json.platforms }}",
+              "value": [
+                {
+                  "text": "={{ $json.caption }}",
+                  "image": []
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "={{ $env.POSTIZ_API_KEY }}"
+          }
+        }
+      },
+      "name": "Postiz API Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [720, 340]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "id": "={{ $json.content_id }}",
+        "fields": {
+          "publication_jobs": {
+            "add": {
+              "postiz_id": "={{ $jsonPostizApiResponse.id }}",
+              "status": "draft",
+              "platform": "postiz"
+            }
+          }
+        }
+      },
+      "name": "Update Content Item",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [960, 340]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.CONTENT_API_URL }}/content/{{ $json.content_id }}",
+        "method": "PATCH",
+        "body": {
+          "publication_status": "draft_created"
+        },
+        "options": {}
+      },
+      "name": "Notify Content API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [1200, 340]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.POSTIZ_PUBLIC_URL }}/public/v1/posts",
+        "method": "POST",
+        "body": {
+          "type": "draft",
+          "creationMethod": "API",
+          "posts": [
+            {
+              "identifier": "={{ $json.platforms }}",
+              "value": [
+                {
+                  "text": "={{ $json.caption }}"
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "={{ $env.POSTIZ_API_KEY }}"
+          }
+        },
+        "onError": "continueError"
+      },
+      "name": "Postiz API Call (Blocked)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [720, 480]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.CONTENT_API_URL }}/content/{{ $json.content_id }}",
+        "method": "PATCH",
+        "body": {
+          "publication_status": "blocked_unsafe"
+        },
+        "options": {}
+      },
+      "name": "Notify Blocked",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [720, 600]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gate: Not Private",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate: Not Private": {
+      "main": [
+        [
+          {
+            "node": "Gate: Approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Blocked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate: Approved": {
+      "main": [
+        [
+          {
+            "node": "Gate: Confidentiality Checked",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Blocked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate: Confidentiality Checked": {
+      "main": [
+        [
+          {
+            "node": "Postiz API Call",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postiz API Call (Blocked)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postiz API Call": {
+      "main": [
+        [
+          {
+            "node": "Update Content Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Content Item": {
+      "main": [
+        [
+          {
+            "node": "Notify Content API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Africa/Kampala"
+  },
+  "versionId": "2"
+}
