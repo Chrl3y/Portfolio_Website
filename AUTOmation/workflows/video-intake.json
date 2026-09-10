@@ -22,29 +22,53 @@
     },
     {
       "parameters": {
-        "commands": [
-          "source /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation/faster-whisper-env/bin/activate && python /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation/tests/test_transcription.py \"{{ $json.video_path }}\" > \"{{ $json.transcript_path }}\" 2>&1"
-        ],
-        "cwd": "/Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation"
+        "url": "={{ $env.CONTENT_API_URL }}/content",
+        "method": "POST",
+        "body": {
+          "source_type": "recording",
+          "source_path": "={{ $json.video_path }}",
+          "title": "={{ $json.source_metadata.title || 'Untitled Recording' }}"
+        },
+        "options": {}
       },
-      "name": "Run Transcription",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
+      "name": "Create Content Item",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
       "position": [720, 340]
     },
     {
       "parameters": {
-        "operations": [
-          {
-            "operation": "read",
-            "fileName": "={{ $json.transcript_path }}"
+        "url": "={{ $env.TRANSCRIPTION_API_URL }}/transcribe",
+        "method": "POST",
+        "body": {
+          "input": "={{ $json.video_path }}",
+          "model": "small"
+        },
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
           }
-        ]
+        }
       },
-      "name": "Read Transcript",
-      "type": "n8n-nodes-base.readBinaryFile",
-      "typeVersion": 1,
-      "position": [960, 340]
+      "name": "Run Transcription",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [720, 480]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUBTITLE_API_URL }}/generate",
+        "method": "POST",
+        "body": {
+          "transcript": "={{ $jsonRunTranscription.text }}",
+          "target_formats": ["srt", "vtt"]
+        },
+        "options": {}
+      },
+      "name": "Generate Captions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [720, 600]
     }
   ],
   "connections": {
@@ -63,6 +87,11 @@
       "main": [
         [
           {
+            "node": "Create Content Item",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "Run Transcription",
             "type": "main",
             "index": 0
@@ -75,5 +104,5 @@
   "settings": {
     "timezone": "Africa/Kampala"
   },
-  "versionId": "1"
+  "versionId": "2"
 }

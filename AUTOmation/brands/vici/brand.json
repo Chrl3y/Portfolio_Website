@@ -1,0 +1,48 @@
+{
+  "brand": "vici",
+  "sub_brand": "Vici",
+  "motto": "Explaining technology so you don't have to learn it the hard way.",
+  "logo": {
+    "dark": null,
+    "light": null,
+    "placeholder_note": "Replace with actual logo files before production rendering."
+  },
+  "colors": {
+    "primary": "#3B82F6",
+    "accent": "#8B5CF6",
+    "background_dark": "#0F0F10",
+    "background_light": "#FFFFFF",
+    "text_dark": "#FFFFFF",
+    "text_light": "#1A1A1A"
+  },
+  "fonts": {
+    "heading": "Inter or SF Pro Display",
+    "body": "Inter or SF Pro Text",
+    "mono": "Fira Code or JetBrains Mono",
+    "caption": "Inter or SF Pro Display"
+  },
+  "video": {
+    "intro_duration": 3.0,
+    "outro_duration": 3.0,
+    "caption_style": {
+      "position": "bottom",
+      "background": "semi-transparent black",
+      "font_size": "4.5%",
+      "font_weight": "bold",
+      "max_lines": 2
+    },
+    "motion_style": {
+      "easing": "ease-out-quart",
+      "transition_duration": 0.6,
+      "kinetic_intensity": "medium"
+    },
+    "safe_margins": {
+      "title_safe": 0.08,
+      "action_safe": 0.05
+    }
+  },
+  "social": {
+    "default_formats": ["16x9", "9x16", "1x1"],
+    "platforms": ["youtube", "linkedin", "twitter", "instagram", "tiktok"]
+  }
+}

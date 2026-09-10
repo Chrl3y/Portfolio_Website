@@ -1,81 +1,86 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Video Scene Plan",
-  "description": "Schema for a video scene plan — bridges transcription to animated rendering",
+  "description": "Schema for AUTOmation video scene plans",
   "type": "object",
-  "required": ["content_item_id", "scenes", "created_at", "updated_at"],
+  "required": ["schema", "version", "content_id", "scenes", "duration"],
   "properties": {
-    "content_item_id": {
+    "schema": {
       "type": "string",
-      "description": "Reference to the content item"
+      "const": "video-scene-plan"
     },
-    "title": {
+    "version": {
       "type": "string",
-      "description": "Scene plan title"
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "content_id": {
+      "type": "string"
     },
     "scenes": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["scene_id", "start_time", "end_time", "visual_type"],
+        "required": ["type", "renderer", "content"],
         "properties": {
-          "scene_id": {
+          "type": {
             "type": "string",
-            "description": "Unique scene identifier"
+            "enum": [
+              "original-camera",
+              "kinetic-text",
+              "quote",
+              "title",
+              "diagram",
+              "flowchart",
+              "timeline",
+              "list",
+              "metric",
+              "screenshot",
+              "code",
+              "b-roll-placeholder",
+              "cta"
+            ]
           },
-          "start_time": {
-            "type": "number",
-            "description": "Start time in seconds"
-          },
-          "end_time": {
-            "type": "number",
-            "description": "End time in seconds"
+          "renderer": {
+            "type": "string",
+            "enum": ["remotion", "manim", "mermaid"]
           },
           "duration": {
             "type": "number",
-            "description": "Scene duration in seconds"
+            "minimum": 0
           },
-          "visual_type": {
-            "type": "string",
-            "enum": ["manim", "mermaid", "remotion", "stock footage", "b-roll", "text overlay"],
-            "description": "Type of visual for this scene"
+          "start": {
+            "type": "number",
+            "minimum": 0
           },
-          "text": {
-            "type": "string",
-            "description": "Text to display in this scene"
+          "end": {
+            "type": "number",
+            "minimum": 0
           },
-          "narration_text": {
-            "type": "string",
-            "description": "Voice-over text for this scene"
-          },
-          "animation_params": {
+          "content": {
             "type": "object",
-            "description": "Parameters specific to the animation type"
-          },
-          "transition": {
-            "type": "string",
-            "description": "Transition type to the next scene"
+            "properties": {
+              "title": {"type": "string"},
+              "text": {"type": "string"},
+              "source": {"type": "string"},
+              "nodes": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "emphasis": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "image_path": {"type": "string"},
+              "code": {"type": "string"},
+              "language": {"type": "string"}
+            }
           }
         }
-      },
-      "description": "Ordered list of scenes"
+      }
     },
-    "render_engine": {
-      "type": "string",
-      "enum": ["manim", "remotion", "mermaid", "blended"],
-      "description": "Primary rendering engine for this scene plan"
-    },
-    "style_guide": {
-      "type": "string",
-      "description": "Brand style guide reference for this rendering"
-    },
-    "created_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "updated_at": {
-      "type": "string",
-      "format": "date-time"
+    "duration": {
+      "type": "number",
+      "minimum": 0
     }
   }
 }

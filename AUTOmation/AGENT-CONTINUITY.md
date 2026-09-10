@@ -23,7 +23,7 @@
 |-------------|------|---------|--------|
 | faster-whisper | `runtime/faster-whisper-env/` | Transcription (tiny, CPU) | ✅ Working — recognizes speech text |
 | WhisperX | `runtime/whisperx-env/` | Alignment + diarization | ✅ Import OK (CPU) |
-| DeepFilterNet | `deepfilternet-env/` | Noise reduction (CLI) | ✅ Model loads, `deep-filter-py` CLI works |
+|| DeepFilterNet | `runtime/deepfilternet-env/` | Noise reduction (CLI) | ✅ Model loads, `deep-filter-py` CLI works |
 | Manim | `runtime/manim-env/` | Technical animations | ✅ Rendering works (Manim 0.21.0) |
 
 **All venvs use Python 3.12 via `uv`. PyTorch uses CPU index.**
@@ -105,11 +105,20 @@ AUTOmation/
 │   │   ├── scene.py                # AutomationFlow scene
 │   │   └── renders/                 (gitignored)
 │   └── puppeteer.config.json       # Chrome path for Mermaid CLI
-├── runtime/                        # Python venvs (canonical location)
+├── runtime/                        # Python venvs + data
 │   ├── faster-whisper-env/         # faster-whisper 1.2.1 (CPU, tiny model)
 │   ├── whisperx-env/               # WhisperX 3.8.6 (CPU)
-│   └── manim-env/                  # Manim 0.21.0 (created 2026-09-10)
-├── deepfilternet-env/              # DeepFilterNet venv (root level)
+│   ├── deepfilternet-env/          # DeepFilterNet venv
+│   ├── manim-env/                  # Manim 0.21.0
+│   ├── content-api-env/            # FastAPI content API
+│   └── data/                       # SQLite databases (gitignored)
+├── services/                       # Python service modules
+│   ├── content_store/              # SQLite-backed persistence
+│   ├── content_api/                # FastAPI endpoints
+│   ├── transcription/              # Faster-whisper transcription service
+│   ├── captions/                   # SRT/VTT/JSON caption generation
+│   ├── scene_planner/              # Rule-based scene planning
+│   └── video_assembler/            # FFmpeg-based video assembly
 ├── schemas/                        # JSON schemas
 ├── workflows/                      # n8n workflow JSON files
 ├── scripts/
