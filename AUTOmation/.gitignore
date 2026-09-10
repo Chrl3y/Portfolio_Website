@@ -41,6 +41,7 @@ venv/
 *.mp3
 *.m4a
 *.aac
+*.aiff
 
 # Node / npm / pnpm artifacts
 node_modules/
@@ -49,11 +50,21 @@ node_modules/
 
 # Remotion media output
 media/remotion/renders/
-media/manim/renders/
+media/remotion/node_modules/
 media/remotion/media/
 
-# Manim temp/movie files
+# Manim temp/movie files (rendered from any directory)
+media/manim/renders/
 media/manim/media/
+media/manim/__pycache__/
+media/manim/texts/
+media/manim/videos/
+media/videos/
+media/texts/
+
+# Test audio (intermediate/generated files)
+tests/test-audio.*
+tests/transcription-test.*
 
 # Browser/puppeteer cache
 .puppeteer/

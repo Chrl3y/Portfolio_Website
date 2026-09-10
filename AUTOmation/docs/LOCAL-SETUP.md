@@ -5,7 +5,7 @@
 - macOS 14+ (Sonoma or later)
 - Apple Silicon (M1/M2/M3) — tested on M1 Pro
 - Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-- Docker Desktop or OrbStack
+- Docker Desktop (for Postiz stack) + OrbStack (for n8n)
 
 ## System Dependencies
 
@@ -19,104 +19,129 @@ brew install pnpm
 
 ## Python Environments
 
-All Python environments use `uv` with Python 3.12:
+All Python environments use `uv` with Python 3.12 and live under `runtime/` (with the exception of DeepFilterNet):
 
 ```bash
-cd AUTOmation
+# ALWAYS start from the AUTOmation root
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
 
 # faster-whisper (transcription)
 uv venv --python 3.12 runtime/faster-whisper-env
 source runtime/faster-whisper-env/bin/activate
 uv pip install faster-whisper
+deactivate
 
 # WhisperX (alignment + diarization)
 uv venv --python 3.12 runtime/whisperx-env
 source runtime/whisperx-env/bin/activate
 uv pip install torch --index-url https://download.pytorch.org/whl/cpu
 uv pip install whisperx
+deactivate
 
 # DeepFilterNet (noise reduction)
 uv venv --python 3.12 deepfilternet-env
 source deepfilternet-env/bin/activate
 uv pip install deepfilternet
 uv pip install torch torchaudio
+deactivate
 
 # Manim (technical animations)
-uv venv --python 3.12 manim-env
-source manim-env/bin/activate
+uv venv --python 3.12 runtime/manim-env
+source runtime/manim-env/bin/activate
 uv pip install manim
+deactivate
 ```
 
 ### Apple Silicon Notes
 
 - PyTorch CPU builds work via `--index-url https://download.pytorch.org/whl/cpu`
 - MPS (Metal Performance Shaders) is NOT recommended for faster-whisper — CPU mode is more stable
-- Manim runs natively on macOS ARM via Homebrew Python
+- Manim runs natively on macOS ARM
 - DeepFilterNet runs on CPU (no GPU needed for basic noise reduction)
 
 ## Docker Services
 
-### n8n
+### n8n (runs under OrbStack context)
 ```bash
-docker compose -f AUTOmation/infra/docker-compose.yml up -d n8n
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
+docker --context orbstack compose -f infra/docker-compose.yml up -d
 # UI: http://localhost:5678
 ```
 
-### Postiz
-Postiz requires PostgreSQL, Redis, and Temporal. Use the official docker-compose:
+### Postiz (runs under Docker Desktop context)
+Postiz requires PostgreSQL, Redis, and Temporal. Uses the official docker-compose template:
 
 ```bash
-# Clone official repo (already in vendor/postiz-docker-compose)
-docker compose -f AUTOmation/infra/postiz/docker-compose.yml --env-file /tmp/postiz-env-clean up -d
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
+cp infra/postiz/.env.example /tmp/postiz-env-clean
+# Edit /tmp/postiz-env-clean to set POSTGRES_PASSWORD, BACKEND_INTERNAL_URL=http://localhost:3000
+docker compose -f infra/postiz/docker-compose.yml --env-file /tmp/postiz-env-clean up -d
 # UI: http://localhost:3004
 ```
-
-### Activepieces (deferred)
-See Phase 14 notes.
 
 ## Node.js Tooling
 
 ```bash
-cd AUTOmation/media/remotion
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation/media/remotion || exit 1
 npm install
-npx remotion render index.jsx ViciExplainer renders/vici-explainer.mp4 --duration 180 --fps 30
+node_modules/.bin/remotion compositions index.jsx
+mkdir -p renders
+node_modules/.bin/remotion render index.jsx ViciExplainer renders/vici-explainer.mp4
 ```
 
 ## Mermaid CLI
 
 ```bash
-# Requires Chrome for Testing (install first)
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
+# Install Chrome for Testing (required for headless rendering)
 npx puppeteer browsers install chrome
+# Install mermaid CLI
 npm install -g @mermaid-js/mermaid-cli
-mmdc -i docs/architecture-diagram.mmd -o docs/architecture-diagram.svg -t dark -p media/puppeteer.config.json
+# Render (use puppeteer config for Chrome path)
+PUPPETEER_EXECUTABLE_PATH="$(node -e "console.log(require('puppeteer').executablePath())")" \
+  mmdc -i docs/architecture-diagram.mmd -o docs/architecture-diagram.svg -t dark
 ```
 
 ## Verification Commands
 
 ```bash
-# faster-whisper
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
+
+# faster-whisper (generates test speech if no arg provided)
 source runtime/faster-whisper-env/bin/activate
-python tests/test_transcription.py tests/test-audio.wav
+python tests/test_transcription.py tests/transcription-test.wav
+deactivate
+
+# WhisperX
+source runtime/whisperx-env/bin/activate
+python -c "import whisperx; print('WhisperX OK')"
+deactivate
 
 # DeepFilterNet
 source deepfilternet-env/bin/activate
-python tests/test_deepfilter.py tests/test-audio.wav
+deep-filter-py --help
+deactivate
 
 # Manim
-source manim-env/bin/activate
-manim media/manim/scene.py AutomationFlow -pql
+runtime/manim-env/bin/manim media/manim/scene.py AutomationFlow -ql -o automation-flow-preview
 
 # Remotion
-cd media/remotion && npx remotion render index.jsx ViciExplainer renders/vici-explainer.mp4 --duration 180 --fps 30
+cd media/remotion && ../node_modules/.bin/remotion render index.jsx ViciExplainer renders/vici-explainer.mp4
 
 # n8n
 curl -s -o /dev/null -w "%{http_code}" http://localhost:5678
 
 # Postiz
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3004/
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3004/auth
 
 # Mermaid
-mmdc -i docs/architecture-diagram.mmd -o docs/architecture-diagram.svg -t dark
+npx -y @mermaid-js/mermaid-cli --version
+
+# Docker (Postiz stack)
+docker compose -f infra/postiz/docker-compose.yml ps
+
+# Docker (n8n — OrbStack context)
+docker --context orbstack compose -f infra/docker-compose.yml ps
 ```
 
 ## Directory Layout
@@ -134,10 +159,11 @@ AUTOmation/
 │   ├── clean-audio.sh
 │   └── repair-voice.py
 ├── infra/
-│   ├── docker-compose.yml          # n8n
+│   ├── docker-compose.yml          # n8n (port 5678, OrbStack context)
 │   └── postiz/
 │       ├── docker-compose.yml      # Postiz + Temporal + PostgreSQL + Redis
-│       └── puppeteer.config.json
+│       └── dynamicconfig/
+│           └── development-sql.yaml
 ├── schemas/
 │   ├── content-item.schema.json
 │   ├── publishing-job.schema.json
@@ -150,11 +176,11 @@ AUTOmation/
 │   ├── test_transcription.py
 │   ├── test_whisperx.py
 │   └── test_deepfilter.py
-├── runtime/                        # Python venvs
+├── runtime/                        # Python venvs (canonical location)
 │   ├── faster-whisper-env/
-│   └── whisperx-env/
-├── deepfilternet-env/              # DeepFilterNet venv
-├── manim-env/                      # Manim venv
+│   ├── whisperx-env/
+│   └── manim-env/
+├── deepfilternet-env/              # DeepFilterNet venv (root level)
 ├── voice/
 │   └── README.md
 ├── integrations/
@@ -162,16 +188,17 @@ AUTOmation/
 │   └── ayrshare/README.md
 ├── media/
 │   ├── remotion/                   # Independent Remotion app
-│   │   ├── index.jsx
-│   │   ├── ViciExplainer.jsx
+│   │   ├── index.jsx               # Entry point (registerRoot)
+│   │   ├── ViciExplainer.jsx       # Test composition
 │   │   ├── VideoSchema.jsx
 │   │   ├── package.json
-│   │   └── renders/
-│   ├── manim/                      # Manim project
+│   │   ├── package-lock.json
+│   │   ├── node_modules/            (gitignored)
+│   │   └── renders/                 (gitignored)
+│   ├── manim/                      # Manim project source
 │   │   ├── scene.py
-│   │   ├── manim-env/
-│   │   └── renders/
-│   └── puppeteer.config.json
+│   │   └── renders/                 (gitignored)
+│   └── puppeteer.config.json        # Chrome path for Mermaid CLI
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── TOOLING-RESEARCH.md
@@ -181,13 +208,12 @@ AUTOmation/
 │   ├── LOCAL-SETUP.md
 │   ├── architecture-diagram.mmd
 │   ├── architecture-diagram.svg
-│   └── architecture-diagram.png
-├── vendor/                         # NOT COMMITTED
+│   └── railroad-diagram.mmd
+├── vendor/                         # NOT COMMITTED (see .gitignore)
 │   ├── remotion/
 │   ├── postiz-app/
 │   ├── postiz-docker-compose/
 │   ├── manim/
 │   └── mermaid/
-├── renders/                        # NOT COMMITTED
-└── models/                         # NOT COMMITTED
+└── renders/                         # NOT COMMITTED
 ```

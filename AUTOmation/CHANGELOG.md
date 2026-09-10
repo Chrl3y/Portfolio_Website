@@ -21,7 +21,14 @@
 - n8n healthy (HTTP 200)
 - PostgreSQL auth for Postiz → FIXED (password reset resolved scram-sha-256 mismatch)
 
-### Failures / Deferred
+| **2026-09-10 Verification Gate** | n8n ✅ 200 · Postiz ✅ 200 · faster-whisper ✅ (recognized speech) · Manim ✅ 29s MP4 · Remotion ✅ 6s MP4 · Mermaid ✅ SVG |
+
+### 2026-09-10 Verification Updates
+- faster-whisper re-tested with real macOS `say` speech → recognized "This is the Automation Transcription System Test for Verification."
+- Manim re-rendered with `runtime/manim-env` (standardized location) → 29s/357KB MP4
+- All stray venvs removed: `manim-env/`, `faster-whisper-env/` at root, `media/remotion/manim-env/`
+- Stray root `node_modules/` removed; package files moved to `media/remotion/`
+- n8n runs under OrbStack Docker context; Postiz runs under Docker Desktop context
 - DeepFilterNet CLI processing timed out (>60s) on sine-wave test audio — likely too slow for non-speech audio on CPU; model loads fine
 - Activepieces → DEFERRED (n8n is primary orchestrator)
 - Voice cloning tools (Chatterbox, OpenVoice, F5-TTS) → NOT INSTALLED (no synthetic voice needed yet)
@@ -43,8 +50,8 @@
 - `AUTOmation/integrations/vizard/README.md` — Vizard API adapter docs
 - `AUTOmation/integrations/ayrshare/README.md` — Ayrshare API adapter docs
 - `AUTOmation/docs/LOCAL-SETUP.md` — reproducible installation guide
-- `AUTOmation/docs/architecture-diagram.mmd` / `.svg` — architecture diagram
-- `AUTOmation/railroad-diagram.mmd` — railroad diagram (Railway.app alternative)
+- `AUTOmation/docs/architecture-diagram.mmd` & `.svg` — architecture diagram
+- `AUTOmation/docs/railroad-diagram.mmd` — railroad diagram (Railway.app alternative)
 
 ## 2026-09-09
 

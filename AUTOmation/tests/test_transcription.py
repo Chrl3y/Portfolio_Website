@@ -3,67 +3,61 @@
 faster-whisper smoke test.
 
 Usage:
-    source faster-whisper-env/bin/activate
-    python AUTOmation/tests/test_transcription.py <path-to-audio-or-video>
+    source runtime/faster-whisper-env/bin/activate
+    python tests/test_transcription.py tests/transcription-test.wav
 
-Tests transcription on a local audio/video file.
-Never uploads the audio externally.
+Tests transcription with the tiny model (CPU mode).
+Generates real speech with macOS `say` if no audio file is provided.
+
+Never uploads audio externally.
 """
+
 import sys
+import os
+import subprocess
+from faster_whisper import WhisperModel
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python tests/test_transcription.py <path-to-audio-or-video>")
-        print("Never uploads the audio externally.")
+    if len(sys.argv) > 1:
+        audio_path = sys.argv[1]
+    else:
+        # Auto-generate a speech test file if none provided
+        print("No audio file provided. Generating test audio with macOS 'say'...")
+        tests_dir = os.path.dirname(os.path.abspath(__file__))
+        aiff_path = os.path.join(tests_dir, "transcription-test.aiff")
+        wav_path = os.path.join(tests_dir, "transcription-test.wav")
+
+        subprocess.run(
+            ["say", "This is the AUTOmation transcription system test for verification.",
+             "-o", aiff_path],
+            check=True,
+        )
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", aiff_path, "-ar", "16000", "-ac", "1", wav_path],
+            check=True,
+            capture_output=True,
+        )
+        audio_path = wav_path
+        print(f"Generated: {audio_path}")
+
+    if not os.path.exists(audio_path):
+        print(f"ERROR: Audio file not found: {audio_path}")
         sys.exit(1)
 
-    path = sys.argv[1]
-    print(f"Testing faster-whisper on: {path}")
+    print(f"Transcribing: {audio_path}")
+    print("Loading tiny model (CPU)...")
 
-    try:
-        from faster_whisper import WhisperModel
+    model = WhisperModel("tiny", device="cpu", compute_type="float32")
 
-        # Use small model initially
-        model = WhisperModel("tiny", device="cpu", compute_type="float32")
-        print(f"Model loaded: tiny (CPU mode)")
+    segments, info = model.transcribe(audio_path, beam_size=5)
 
-        # Transcribe
-        segments, info = model.transcribe(path)
-        print(f"Language: {info.language} (p={info.language_probability:.2f})")
-        print(f"Duration: {info.duration:.1f}s")
+    for segment in segments:
+        print(f"[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}")
 
-        print("\n" + "=" * 60)
-        print("TRANSCRIPTION RESULT")
-        print("=" * 60)
-        print(f"Model:       tiny")
-        print(f"Language:    {info.language} (p={info.language_probability:.2f})")
-        print(f"Duration:    {info.duration:.1f}s")
-
-        seg_list = list(segments)
-        print(f"Segments:    {len(seg_list)}")
-        print("-" * 60)
-
-        print("SEGMENTS:")
-        for seg in seg_list[:10]:
-            print(f"  [{seg.start:.2f} -> {seg.end:.2f}] {seg.text}")
-
-        full_text = " ".join(seg.text for seg in seg_list)
-        print("-" * 60)
-        print("FULL TEXT:")
-        print(full_text)
-        print("=" * 60)
-        print("faster-whisper smoke test PASSED")
-
-    except ImportError as e:
-        print(f"faster-whisper not installed: {e}")
-        print("Install with: uv pip install faster-whisper (in its own venv)")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    print(f"\nDetected language: {info.language} "
+          f"(probability: {info.language_probability:.2f})")
+    print("faster-whisper smoke test PASSED")
 
 
 if __name__ == "__main__":

@@ -1,76 +1,87 @@
 # AGENT CONTINUITY
 
-> Last updated: 2026-09-10 02:30 EAT
+> Last updated: 2026-09-10 08:00 EAT
 
 ## LOCAL ARCHITECTURE STATE
 
 ### Running Services
 
-| Service | URL | Status | Container |
-|---------|-----|--------|-----------|
-| n8n | http://localhost:5678 | Healthy (200) | `n8n-automation` |
-| Postiz | http://localhost:3004 | Healthy (307→200 on `/auth`) | `postiz-automation` |
-| PostgreSQL (Postiz) | localhost:5433 | Healthy | `postgres-postiz-automation` |
-| Redis (Postiz) | localhost:6380 | Healthy | `redis-postiz-automation` |
-| Temporal | localhost:7233 | Healthy | `temporal-postiz-automation` |
-| Elasticsearch | localhost:9200 | Healthy | `elasticsearch-postiz-automation` |
+| Service | URL | Status | Container | Docker Context |
+|---------|-----|--------|-----------|----------------|
+| n8n | http://localhost:5678 | ✅ Healthy (200) | `n8n-automation` | OrbStack |
+| Postiz | http://localhost:3004 | ✅ Healthy (307→200 on `/auth`) | `postiz-automation` | desktop-linux |
+| PostgreSQL (Postiz) | localhost:5433 | ✅ Healthy | `postgres-postiz-automation` | desktop-linux |
+| Redis (Postiz) | localhost:6380 | ✅ Healthy | `redis-postiz-automation` | desktop-linux |
+| Temporal | localhost:7233 | ✅ Healthy | `temporal-postiz-automation` | desktop-linux |
+| Elasticsearch | localhost:9200 | ✅ Healthy | `temporal-elasticsearch-automation` | desktop-linux |
 
-**Note**: All Postiz services use custom container names suffixed with `-automation` to avoid conflicts.
+**Important**: n8n runs under the **OrbStack** Docker context (`orbstack`), while Postiz runs under **Docker Desktop** (`desktop-linux`). Use `docker ps` for Postiz and `docker --context orbstack ps` for n8n.
 
 ### Python Environments (under AUTOmation/)
 
 | Environment | Path | Purpose | Status |
 |-------------|------|---------|--------|
-| faster-whisper | `runtime/faster-whisper-env/` | Transcription | ✅ Working (CPU) |
+| faster-whisper | `runtime/faster-whisper-env/` | Transcription (tiny, CPU) | ✅ Working — recognizes speech text |
 | WhisperX | `runtime/whisperx-env/` | Alignment + diarization | ✅ Import OK (CPU) |
-| DeepFilterNet | `deepfilternet-env/` | Noise reduction | ✅ Model loads (CPU) |
-| Manim | `manim-env/` | Technical animations | ✅ Rendering works |
+| DeepFilterNet | `deepfilternet-env/` | Noise reduction (CLI) | ✅ Model loads, `deep-filter-py` CLI works |
+| Manim | `runtime/manim-env/` | Technical animations | ✅ Rendering works (Manim 0.21.0) |
 
-**Apple Silicon note**: All Python environments use `uv` with Python 3.12. PyTorch uses CPU index (`https://download.pytorch.org/whl/cpu`). MPS is NOT recommended for faster-whisper (CPU mode is more stable).
+**All venvs use Python 3.12 via `uv`. PyTorch uses CPU index.**
 
 ### Node.js Projects
 
 | Project | Path | Status |
 |---------|------|--------|
-| Remotion | `media/remotion/` | ✅ ViciExplainer renders (6s MP4) |
-| Mermaid CLI | global (npm) | ✅ mmdc renders SVG |
+| Remotion | `media/remotion/` | ✅ ViciExplainer renders (6s, 27.5KB MP4) |
+| Mermaid CLI | global npm | ✅ `mmdc` renders SVG (puppeteer config needed) |
 
 ### Rendered Outputs (gitignored)
 
 - `media/remotion/renders/vici-explainer.mp4` — 6s, 27.5KB
-- `media/manim/renders/` — 29s, 357KB (AutomationFlow)
-- `docs/architecture-diagram.svg` — architecture diagram
+- `media/manim/renders/automation-flow-preview.mp4` — 29s, 357KB (AutomationFlow)
+- `docs/architecture-diagram.svg` — 37KB (architecture diagram)
 
 ## Commands to Restart Services
 
 ### Start all Docker services
 ```bash
-docker compose -f infra/docker-compose.yml up -d n8n
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
+
+# Postiz stack (Docker Desktop context)
 docker compose -f infra/postiz/docker-compose.yml --env-file /tmp/postiz-env-clean up -d
+
+# n8n (OrbStack context)
+docker --context orbstack compose -f infra/docker-compose.yml up -d
 ```
 
 ### Stop all services
 ```bash
-docker compose -f infra/docker-compose.yml down
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
 docker compose -f infra/postiz/docker-compose.yml down
+docker --context orbstack compose -f infra/docker-compose.yml down
 ```
 
-### Run transcription
+### Run transcription (faster-whisper)
 ```bash
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
 source runtime/faster-whisper-env/bin/activate
-python tests/test_transcription.py tests/test-audio.wav
+python tests/test_transcription.py tests/transcription-test.wav
+# Or auto-generate speech: python tests/test_transcription.py
 ```
 
 ### Run Manim render
 ```bash
-source manim-env/bin/activate
-manim media/manim/scene.py AutomationFlow -ql -o automation-flow-preview
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation || exit 1
+AUTOMATION_DIR=$(pwd)
+"$AUTOMATION_DIR/runtime/manim-env/bin/manim" media/manim/scene.py AutomationFlow -ql -o automation-flow-preview
 ```
 
 ### Render Remotion video
 ```bash
-cd media/remotion
-node_modules/.bin/remotion render index.jsx ViciExplainer renders/vici-explainer.mp4 --duration 180 --fps 30
+cd /Users/Chuck/REPOS/projects/Portfolio_Website_v2/AUTOmation/media/remotion || exit 1
+AUTOMATION_DIR="$(cd ../.. && pwd)"
+"$AUTOMATION_DIR/runtime/manim-env/bin/manim" ... # (not remotion — use local binary)
+./node_modules/.bin/remotion render index.jsx ViciExplainer ../../renders/vici-explainer.mp4
 ```
 
 ## Directory Layout
@@ -78,7 +89,7 @@ node_modules/.bin/remotion render index.jsx ViciExplainer renders/vici-explainer
 ```
 AUTOmation/
 ├── infra/
-│   ├── docker-compose.yml          # n8n (port 5678)
+│   ├── docker-compose.yml          # n8n (port 5678, OrbStack context)
 │   └── postiz/
 │       ├── docker-compose.yml      # Postiz + Temporal + PostgreSQL + Redis
 │       └── puppeteer.config.json
@@ -87,17 +98,18 @@ AUTOmation/
 │   │   ├── index.jsx               # Entry point (registerRoot)
 │   │   ├── ViciExplainer.jsx       # Test composition
 │   │   ├── package.json
-│   │   └── renders/
-│   ├── manim/                      # Manim project
+│   │   ├── package-lock.json
+│   │   └── node_modules/            (gitignored)
+│   │       └── renders/             (gitignored)
+│   ├── manim/                      # Manim project source
 │   │   ├── scene.py                # AutomationFlow scene
-│   │   ├── manim-env/
-│   │   └── renders/
+│   │   └── renders/                 (gitignored)
 │   └── puppeteer.config.json       # Chrome path for Mermaid CLI
-├── runtime/                        # Python venvs for transcription
-│   ├── faster-whisper-env/
-│   └── whisperx-env/
+├── runtime/                        # Python venvs (canonical location)
+│   ├── faster-whisper-env/         # faster-whisper 1.2.1 (CPU, tiny model)
+│   ├── whisperx-env/               # WhisperX 3.8.6 (CPU)
+│   └── manim-env/                  # Manim 0.21.0 (created 2026-09-10)
 ├── deepfilternet-env/              # DeepFilterNet venv (root level)
-├── manim-env/                      # Manim venv (root level)
 ├── schemas/                        # JSON schemas
 ├── workflows/                      # n8n workflow JSON files
 ├── scripts/
@@ -113,6 +125,7 @@ AUTOmation/
 │   ├── LOCAL-SETUP.md
 │   ├── architecture-diagram.mmd
 │   ├── architecture-diagram.svg
+│   ├── railroad-diagram.mmd
 │   └── ...
 ├── integrations/
 │   ├── vizard/README.md
@@ -125,53 +138,78 @@ AUTOmation/
 │   ├── remotion/
 │   ├── manim/
 │   └── mermaid/
-├── renders/                        # NOT COMMITTED
 ├── CHANGELOG.md
 ├── AGENT-CONTINUITY.md
 ├── SECURITY.md
 └── .env.example
 ```
 
-### Important Path Notes
+### Important Path Notes (2026-09-10 cleanup)
 
-- Python venvs were created at different levels (some at `AUTOmation/` root, some under `runtime/` and `media/manim/`). This happened because background process cwd was inconsistent. Future agent note: consider standardizing to `runtime/` subdirs.
-- The `manim-env` at `AUTOmation/manim-env/` is the actual installed environment (NOT `media/manim/manim-env/`).
-- The `faster-whisper-env` at `AUTOmation/runtime/faster-whisper-env/` is empty/unused. The working one is at `AUTOmation/faster-whisper-env/`.
+- **ALL Python venvs are now standardized under `runtime/`**: `faster-whisper-env`, `whisperx-env`, `manim-env`
+- **Stray venvs removed**: `manim-env/` and `faster-whisper-env/` at `AUTOmation/` root were deleted
+- **Stray `media/remotion/manim-env/` removed**
+- **Stray root `node_modules/` removed**
+- **Package files moved to `media/remotion/`**: `package.json`, `package-lock.json`
+
+## Verification Results (Gate Matrix)
+
+| Component | Installed | Running | Functional Test | Notes |
+|-----------|-----------|---------|-----------------|-------|
+| n8n | ✅ | ✅ (200 on :5678) | Container `n8n-automation` up (OrbStack) | n8n UI accessible |
+| Postiz | ✅ | ✅ (200 on :3004/auth) | All 6 containers healthy | Requires Temporal deps |
+| PostgreSQL | ✅ | ✅ (healthy) | `postgres-postiz-automation` | Part of Postiz stack |
+| Redis | ✅ | ✅ (healthy) | `redis-postiz-automation` | Part of Postiz stack |
+| Temporal | ✅ | ✅ (healthy) | `temporal-postiz-automation` | Required by Postiz |
+| faster-whisper | ✅ (1.2.1) | — | ✅ Recognized speech in test WAV | tiny model, CPU mode |
+| WhisperX | ✅ (3.8.6) | — | ✅ Import OK | Optional, CPU mode |
+| DeepFilterNet | ✅ (0.5.6) | — | ✅ Model loads, CLI works | Uses `deep-filter-py` |
+| FFmpeg | ✅ (9.0.1) | — | ✅ Audio conversion works | Homebrew |
+| Manim | ✅ (0.21.0) | — | ✅ Rendered 29s MP4 | CPU rendering |
+| Remotion | ✅ (4.0.523) | — | ✅ Rendered 6s MP4 | 27.5KB, ViciExplainer |
+| Mermaid CLI | ✅ (11.x) | — | ✅ SVG rendered | Needs puppeteer config |
+
+### Required Green Gate (all ✅)
+n8n ✅ · Postiz ✅ · FFmpeg ✅ · faster-whisper ✅ · Manim ✅ · Remotion ✅ · Mermaid ✅
 
 ## Next Recommended Steps
 
-1. **Activepieces**: Start using official Docker Compose (defer if Temporal conflicts arise)
-2. **Voice tools**: Survey Chatterbox licensing and test on M1 Pro
-3. **n8n workflows**: Import JSON workflows into the n8n UI and test end-to-end
-4. **Postiz**: Set up admin user, test draft publishing via API (no social accounts connected)
-5. **DeepFilterNet**: Test with actual speech audio (not sine wave) to verify processing completes
-6. **WhisperX**: Run alignment test with a real audio file
-7. **Content data model**: Write n8n nodes that read/write the JSON schemas
+1. **n8n workflows**: Import JSON workflows into the n8n UI and test end-to-end
+2. **Postiz**: Set up admin user, test draft publishing via API (no social accounts connected)
+3. **DeepFilterNet**: Test with actual speech audio to verify processing completes
+4. **Voice tools**: Survey Chatterbox licensing and test on M1 Pro
+5. **Content data model**: Write n8n nodes that read/write the JSON schemas
 
-## Unresolved Problems
+## Deferred (explicitly out of scope for this gate)
+
+- Activepieces
+- Voice cloning (Chatterbox/OpenVoice/F5-TTS)
+- Heavy video models (Wan2.2, LTX, CogVideoX)
+- Cloud GPU models
+- Social credentials
+- Public publishing
+
+## Problems Encountered & Solutions
 
 ### Problem 1: Postiz DATABASE_URL password masking
-The Hermes terminal masks `postiz-password` as `***` in all output, making debugging difficult. The actual value is correct in the file and container — this is a display-level masking, not a real issue.
+The Hermes terminal masks `postiz-password` as `***` in all output. The actual value is correct — this is display-level masking only.
 
 ### Problem 2: Postiz PostgreSQL auth failure
-**Symptom**: Postiz Prisma reports "password authentication failed" for `postiz-user` even though the same credentials work from the host.
-**Root cause**: The `postgres-postiz-automation` container was recreated with the volume but the password hash in the database didn't match. The `pg_hba.conf` uses `scram-sha-256` for non-localhost connections.
-**Fix**: Reset the password with `psql -U postgres -c "ALTER USER \"postiz-user\" WITH PASSWORD 'postiz-password'"` inside the postgres container.
+**Symptom**: Postiz Prisma reports "password authentication failed" for `postiz-user`.
+**Root cause**: Container recreation with volume but password hash mismatch (`scram-sha-256`).
+**Fix**: `ALTER USER "postiz-user" WITH PASSWORD 'postiz-password'` inside the postgres container.
 
 ### Problem 3: Hermes terminal cwd not applied
-The `terminal` tool's `cwd` parameter sometimes doesn't take effect — commands run from the session's original working directory. **Workaround**: Always use `cd /absolute/path &&` prefix or absolute paths in commands.
+The terminal tool's `cwd` parameter sometimes doesn't take effect. **Workaround**: Always `cd /absolute/path || exit 1` at the start of commands.
 
-### Problem 4: Hermes terminal password masking
-The terminal tool masks strings containing `password` as `***`, making it impossible to verify credential values in output. This is a display-level masking only.
+### Problem 4: Multiple Docker contexts (OrbStack vs Desktop)
+n8n was started under OrbStack context; Postiz under Docker Desktop. n8n compose commands need `--context orbstack` flag or the OrbStack context must be active.
 
-### Problem 5: Tool name confusion
-The tool is named `terminal`, not `shell`. Repeated muscle-memory errors caused wasted tool calls.
+### Problem 5: Stray venvs from inconsistent cwd
+Background processes created venvs at `AUTOmation/` root instead of `runtime/` due to cwd resolution failures. All cleaned up and recreated under `runtime/`.
 
-### Problem 6: npx vs local binary
-`npx remotion` resolves to a different (older) version than the local `node_modules/.bin/remotion`. Always use the local binary.
+### Problem 6: Mermaid CLI puppeteer config
+`mmdc` requires Chrome path via puppeteer config (`media/.puppeteer.json`) and `PUPPETEER_EXECUTABLE_PATH` env var.
 
-### Problem 7: pnpm vs npm
-pnpm didn't create `node_modules/.bin/` links properly in this environment. Using `npm install` instead resolved the issue.
-
-### Problem 8: DeepFilterNet enhance() API change
-The `enhance()` function signature changed in DeepFilterNet 0.5.6 — it now takes `audio: torch.Tensor` directly instead of a file path. Use the `deep-filter-py` CLI for file I/O instead.
+### Problem 7: DeepFilterNet enhance() API change
+The `enhance()` function signature changed in 0.5.6 — takes `audio: torch.Tensor` directly. Use `deep-filter-py` CLI for file I/O.
